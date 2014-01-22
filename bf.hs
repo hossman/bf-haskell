@@ -34,7 +34,13 @@ run prog stdin = stdout
 eval :: Program -> Tape -> [Char] -> (Tape, [Char], [Char])
 eval [] tape stdin = (tape, stdin, [])
 
--- TODO: recursively process loops
+eval (Loop loopbody : morecmd) tape stdin
+     | '\0' == x = eval morecmd tape stdin
+     | '\0' /= y = eval (Loop loopbody : morecmd) tape' stdin'
+     | otherwise = eval morecmd tape' stdin'
+     where (_, x, _) = tape
+           (tape', stdin', stdout) = eval loopbody tape stdin
+           (_, y, _) = tape'
 
 eval (GoL : morecmd) (y : lefttape, x, righttape) stdin
      = eval morecmd (lefttape, y, x : righttape) stdin
@@ -52,9 +58,4 @@ eval (Write : morecmd) (lefttape, x, righttape) stdin
 eval (cmd : morecmd) (lefttape, x, righttape) stdin
      | Incr == cmd = eval morecmd (lefttape, chr (ord x + 1), righttape) stdin
      | Decr == cmd = eval morecmd (lefttape, chr (ord x - 1), righttape) stdin
-
-
-
-
-
 
