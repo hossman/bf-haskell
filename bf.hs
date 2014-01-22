@@ -28,10 +28,11 @@ parse (x : morechars)
 type Tape = ([Char], Char, [Char])
 
 run :: Program -> [Char] -> [Char]
-run prog stdin = eval prog ([], '\0', ['\0','\0'..]) stdin
+run prog stdin = stdout
+    where (tape, _, stdout) = eval prog ([], '\0', ['\0','\0'..]) stdin
 
-eval :: Program -> Tape -> [Char] -> [Char]
-eval [] tape stdin = []
+eval :: Program -> Tape -> [Char] -> (Tape, [Char], [Char])
+eval [] tape stdin = (tape, stdin, [])
 
 -- TODO: recursively process loops
 
@@ -46,7 +47,8 @@ eval (Read : morecmd) tape []
 eval (Read : morecmd) (lefttape, x, righttape) (i : morein)
      = eval morecmd (lefttape, i, righttape) morein
 eval (Write : morecmd) (lefttape, x, righttape) stdin
-     = x : eval morecmd (lefttape, x, righttape) stdin
+     = (tape, stdin', x : stdout)
+     where (tape, stdin', stdout) = eval morecmd (lefttape, x, righttape) stdin
 eval (cmd : morecmd) (lefttape, x, righttape) stdin
      | Incr == cmd = eval morecmd (lefttape, chr (ord x + 1), righttape) stdin
      | Decr == cmd = eval morecmd (lefttape, chr (ord x - 1), righttape) stdin
