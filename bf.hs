@@ -31,14 +31,18 @@ run :: Program -> [Char] -> [Char]
 run prog stdin = eval prog ([], '\0', ['\0','\0'..]) stdin
 
 eval :: Program -> Tape -> [Char] -> [Char]
-eval [] tape stdin = ""
+eval [] tape stdin = []
 
 -- TODO: recursively process loops
 
 eval (GoL : morecmd) (y : lefttape, x, righttape) stdin
      = eval morecmd (lefttape, y, x : righttape) stdin
+eval (GoL : morecmd) ([], _, _) stdin
+     = error "Can't go left past the start of the tape."
 eval (GoR : morecmd) (lefttape, x, y : righttape) stdin
      = eval morecmd (x : lefttape, y, righttape) stdin
+eval (Read : morecmd) tape []
+     = error "No more stdin to read."
 eval (Read : morecmd) (lefttape, x, righttape) (i : morein)
      = eval morecmd (lefttape, i, righttape) morein
 eval (Write : morecmd) (lefttape, x, righttape) stdin
